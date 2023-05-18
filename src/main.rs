@@ -1,14 +1,11 @@
 mod core;
 
-use crate::core::{
-    ball::Ball,
-    bricks::{Bricks, Touch, BRICK_HEIGHT, BRICK_WIDTH},
-    player::Player,
-};
-use sdl2::event::Event;
-use sdl2::keyboard::{Keycode, Mod};
+use self::core::ball::BallInteraction;
+use crate::core::{ball::Ball, bricks::Bricks, player::Player};
+use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
-use std::{cell::RefCell, rc::Rc, time::Duration};
+use sdl2::{event::Event, rect::Rect};
+use std::time::Duration;
 
 use sdl2::render::Canvas;
 use sdl2::video::Window;
@@ -18,10 +15,24 @@ pub const HEIGHT: u32 = 600;
 
 pub const BACKGROUND_COLOR: Color = Color::RGB(0, 255, 255);
 
-pub fn rerender(canvas: Rc<RefCell<Canvas<Window>>>) {
-    let canvas = &mut *canvas.borrow_mut();
+pub fn redraw_bg(canvas: &mut Canvas<Window>) {
     canvas.set_draw_color(BACKGROUND_COLOR);
     canvas.clear();
+}
+
+pub trait Entity {
+    fn draw(&mut self, canvas: &mut Canvas<Window>);
+    fn kill(&mut self, canvas: &mut Canvas<Window>);
+}
+
+pub fn intersect_player(ball: &Ball, player: &Player) -> bool {
+    Rect::new(
+        (ball.x - ball.radius).into(),
+        (ball.y - ball.radius).into(),
+        ball.radius as u32 * 2,
+        ball.radius as u32 * 2,
+    )
+    .has_intersection(player.rect)
 }
 
 fn main() {
@@ -34,26 +45,17 @@ fn main() {
         .build()
         .unwrap();
 
-    let canvas = window.into_canvas().build().unwrap();
-    let canvas = Rc::new(RefCell::new(canvas));
-    rerender(Rc::clone(&canvas));
+    let mut canvas = window.into_canvas().build().unwrap();
 
-    // Keylogger :tf:
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut bricks = Bricks::new(Rc::clone(&canvas));
-    bricks.draw();
+    let mut bricks = Bricks::new();
+    let mut ball = Ball::new();
+    let mut player = Player::new();
 
-    let mut ball = Ball::new(Rc::clone(&canvas));
-    ball.draw();
-
-    let mut player = Player::new(Rc::clone(&canvas));
-    player.draw();
-
-    canvas.borrow_mut().present();
     'running: loop {
+        redraw_bg(&mut canvas);
         for event in event_pump.poll_iter() {
-            // Q or Esc to quit
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown {
@@ -61,90 +63,42 @@ fn main() {
                     ..
                 } => break 'running,
                 Event::KeyDown {
-                    keycode: Some(Keycode::Space),
-                    ..
-                } => {
-                    bricks.kill(4, 4);
-                }
-                Event::KeyDown {
                     keycode: Some(Keycode::H),
                     ..
                 } => {
-                    player.translate(-5);
+                    player.set_vel(-5);
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::L),
                     ..
                 } => {
-                    player.translate(5);
+                    player.set_vel(5);
+                }
+                Event::KeyUp {
+                    keycode: Some(Keycode::L),
+                    ..
+                } => {
+                    player.set_vel(0);
+                }
+                Event::KeyUp {
+                    keycode: Some(Keycode::H),
+                    ..
+                } => {
+                    player.set_vel(0);
                 }
                 _ => {}
             }
         }
+        bricks.intersect(&mut ball);
+        player.intersect(&mut ball);
 
-        pub fn intersect(ball: &Ball, bricks: &Bricks) -> Touch {
-            for brick in bricks.brick.iter() {
-                // [  ] <-
-                //if ball.x < brick.x() as i16 + BRICK_WIDTH as i16
-                //    && ball.y > brick.y() as i16
-                //    && ball.y < (brick.y() as i16 + BRICK_HEIGHT as i16)
-                //{
-                //    dbg!("pee");
-                //    return Touch::Side;
-                //}
-
-                //// -> [  ] ;;;;;;;;
-                //if ball.x < brick.x() as i16
-                //    && ball.y > brick.y() as i16
-                //    && ball.y < (brick.y() as i16 + BRICK_HEIGHT as i16)
-                //{
-                //    return Touch::Side;
-                //}
-
-                //// [  ] ;;;;;;;;;;;
-                ////   ^
-                //if ball.y < brick.y() as i16 + BRICK_HEIGHT as i16
-                //    && ball.x < (brick.x() as i16 + BRICK_WIDTH as i16)
-                //    && ball.x > (brick.x() as i16 )
-                //{
-                //    return Touch::Top;
-                //}
-
-                //   ,
-                // [  ]
-                //if ball.y > brick.y() as i16
-                //    && ball.x > brick.x() as i16
-                //    && ball.x < (brick.x() as i16 + BRICK_WIDTH as i16)
-                //{
-                //    return Touch::Top;
-                //}
-
-                if ball.x + 20 > brick.x() as i16
-                    && ball.x - 20 < brick.x() as i16 + BRICK_WIDTH as i16
-                    && ball.y + 20 > brick.y() as i16
-                    && ball.y - 20 < brick.y() as i16 + BRICK_HEIGHT as i16
-                {
-                    return Touch::Top;
-                }
-            }
-            Touch::None
-        }
-
-        //match bricks.intersect_ball(ball.y as i32, ball.x as i32) {
-        match intersect(&ball, &bricks) {
-            Touch::Top => {
-                ball.reflect_y();
-                ball.reflect_x();
-            }
-            Touch::Side => {
-                ball.reflect_x();
-                ball.reflect_y();
-            }
-            _ => (),
-        }
         ball.physics();
 
-        canvas.borrow_mut().present();
+        bricks.draw(&mut canvas);
+        ball.draw(&mut canvas);
+        player.draw(&mut canvas);
+
+        canvas.present();
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }

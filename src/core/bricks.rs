@@ -1,29 +1,56 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{BACKGROUND_COLOR, WIDTH};
+use crate::{Entity, BACKGROUND_COLOR};
+use crate::{HEIGHT, WIDTH};
 
 pub const BRICK_WIDTH: u32 = 100;
 pub const BRICK_HEIGHT: u32 = 40;
 
-pub const MAX_COL: i32 = 6;
-pub const MAX_ROW: i32 = 5;
+pub const MAX_ROW: usize = 6;
+pub const MAX_COL: usize = 5;
 
 // Both row and col are zero indexed
 #[derive(Debug)]
 pub struct Brick {
     pub rect: Rect,
-    row: i32,
-    col: i32,
+    pub row: i32,
+    pub col: i32,
     pub alive: bool,
 }
 
 pub struct Bricks {
-    pub brick: Vec<Brick>,
-    canvas: Rc<RefCell<Canvas<Window>>>,
+    pub bricks: Vec<Vec<Brick>>,
+}
+
+impl Entity for Brick {
+    fn draw(&mut self, canvas: &mut Canvas<Window>) {
+        if self.alive {
+            canvas.set_draw_color(Color::RGB(0, 0, 0));
+            canvas.fill_rect(self.rect).unwrap();
+        } else {
+            canvas.set_draw_color(BACKGROUND_COLOR);
+            canvas.fill_rect(self.rect).unwrap();
+        }
+    }
+
+    fn kill(&mut self, canvas: &mut Canvas<Window>) {
+        todo!()
+    }
+}
+
+impl Entity for Bricks {
+    fn draw(&mut self, canvas: &mut Canvas<Window>) {
+        for col in self.bricks.iter_mut() {
+            for brick in col {
+                brick.draw(canvas);
+            }
+        }
+    }
+
+    fn kill(&mut self, canvas: &mut Canvas<Window>) {
+        todo!()
+    }
 }
 
 pub enum Touch {
@@ -33,59 +60,69 @@ pub enum Touch {
 }
 
 impl Bricks {
-    pub fn new(canvas: Rc<RefCell<Canvas<Window>>>) -> Bricks {
-        let mut brick: Vec<Brick> = Vec::new();
+    pub fn new() -> Bricks {
+        let mut bricks: Vec<Vec<Brick>> = Vec::with_capacity(MAX_ROW);
 
-        let mut row = 0;
-        for i in 0..(MAX_COL * MAX_ROW) {
-            if i % MAX_COL == 0 {
-                row += 1;
+        for i in 0..MAX_ROW {
+            let mut col = Vec::with_capacity(MAX_ROW);
+            for j in 0..MAX_COL {
+                col.push(Brick::new(i, j));
             }
-            brick.push(Brick::new(i % MAX_COL, row));
+            bricks.push(col);
         }
 
-        Bricks { brick, canvas }
-    }
-
-    pub fn draw(&mut self) {
-        for brick in self.brick.iter_mut() {
-            brick.draw(&mut self.canvas.borrow_mut());
-        }
-    }
-
-    pub fn intersect_ball(&mut self, y: i32, x: i32) -> Touch {
-        for brick in self.brick.iter_mut() {
-            match brick.intersect_ball(20, y, x) {
-                Touch::Top => {
-                    return Touch::Top
-                }
-                Touch::Side => {
-                    return Touch::Side
-                }
-                _ => ()
-            }
-        }
-        Touch::None
-    }
-
-    pub fn kill(&mut self, col: i32, row: i32) {
-        let brick = &mut self.brick[(col + (row * MAX_COL)) as usize];
-        brick.alive = false;
-        self.draw();
+        Bricks { bricks }
     }
 }
 
 impl Brick {
-    pub fn new(col: i32, row: i32) -> Brick {
+    pub fn new(row: usize, col: usize) -> Brick {
+        let number_of_rows = MAX_ROW;
+        let number_of_cols = MAX_COL;
+        let inner_pad = 5;
+        let outer_pad = 16;
+        let screen_width = WIDTH;
+        let screen_height = HEIGHT;
+
+        let grid_ratio = |n| (n * 3) / 7;
+
+        let grid_height = grid_ratio(screen_height);
+        let grid_width = screen_width;
+
+        let brick_width = (grid_width
+            - (outer_pad as u32 * 2)
+            - (inner_pad as u32 * (number_of_cols as u32 - 1)))
+            / number_of_cols as u32;
+
+        let brick_height = (grid_height
+            - (outer_pad as u32 * 2)
+            - (inner_pad as u32 * (number_of_rows as u32 - 1)))
+            / number_of_rows as u32;
+
+        let brick_x = (outer_pad as i32 + (col as i32 * inner_pad as i32))
+            + (col as i32 * brick_width as i32);
+        let brick_y = (outer_pad as i32 + (row as i32 * inner_pad as i32))
+            + (row as i32 * brick_height as i32);
+
         const LEFT_OFFSET: i32 = 80;
         const TOP_OFFSET: i32 = 20;
 
+        let col = col as i32;
+        let row = row as i32;
+
         let rect = Rect::new(
-            (col * (BRICK_WIDTH as i32 + 9)) + LEFT_OFFSET,
-            (row * (BRICK_HEIGHT as i32 + 9)) + TOP_OFFSET,
-            BRICK_WIDTH,
-            BRICK_HEIGHT,
+            brick_x as i32,
+            brick_y as i32,
+            brick_width as u32,
+            brick_height as u32,
         );
+
+        //let rect = Rect::new(
+        //    (col * (BRICK_WIDTH as i32 + 9)) + LEFT_OFFSET,
+        //    (row * (BRICK_HEIGHT as i32 + 9)) + TOP_OFFSET,
+        //    BRICK_WIDTH,
+        //    BRICK_HEIGHT,
+        //);
 
         Brick {
             rect,
@@ -103,28 +140,15 @@ impl Brick {
         self.rect.y
     }
 
-    pub fn intersect_ball(&mut self, radius: i32, y: i32, x: i32) -> Touch {
-        //if self.rect.x() <  radius || (self.rect.x() - BRICK_WIDTH as i32) > radius {
-        //    return true
-        //}
-        if y - radius < self.rect.y() + BRICK_HEIGHT as i32 {
-            return Touch::Top
-        }
-
-        //if x - radius < self.rect.x() + BRICK_WIDTH as i32 {
-        //    return Touch::Side
-        //}
-
-        Touch::None
+    pub fn width(&self) -> u32 {
+        self.rect.width()
     }
 
-    pub fn draw(&mut self, canvas: &mut Canvas<Window>) {
-        if self.alive {
-            canvas.set_draw_color(Color::RGB(0, 0, 0));
-            canvas.fill_rect(self.rect).unwrap();
-        } else {
-            canvas.set_draw_color(BACKGROUND_COLOR);
-            canvas.fill_rect(self.rect).unwrap();
-        }
+    pub fn height(&self) -> u32 {
+        self.rect.height()
+    }
+
+    pub fn dead(&mut self) {
+        self.alive = false;
     }
 }
