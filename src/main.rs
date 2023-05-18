@@ -74,7 +74,7 @@ fn main() {
                     keycode: Some(Keycode::H),
                     ..
                 } => {
-                    player.set_vel(PLAYER_VEL * -1);
+                    player.set_vel(-PLAYER_VEL);
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::L),

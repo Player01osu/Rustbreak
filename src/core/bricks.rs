@@ -91,16 +91,16 @@ impl Brick {
             - (inner_pad as u32 * (number_of_rows as u32 - 1)))
             / number_of_rows as u32;
 
-        let brick_x = (outer_pad as i32 + (col as i32 * inner_pad as i32))
+        let brick_x = (outer_pad + (col as i32 * inner_pad))
             + (col as i32 * brick_width as i32);
-        let brick_y = (outer_pad as i32 + (row as i32 * inner_pad as i32))
+        let brick_y = (outer_pad + (row as i32 * inner_pad))
             + (row as i32 * brick_height as i32);
 
         let rect = Rect::new(
-            brick_x as i32,
-            brick_y as i32,
-            brick_width as u32,
-            brick_height as u32,
+            brick_x,
+            brick_y,
+            brick_width,
+            brick_height,
         );
 
         Brick {

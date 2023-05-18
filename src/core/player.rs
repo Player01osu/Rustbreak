@@ -1,8 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
 
-use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window};
 
-use crate::{Entity, BACKGROUND_COLOR, HEIGHT, WIDTH, PLAYER_WIDTH, PLAYER_HEIGHT};
+use sdl2::{rect::Rect, render::Canvas, video::Window};
+
+use crate::{Entity, HEIGHT, WIDTH, PLAYER_WIDTH, PLAYER_HEIGHT};
 
 pub struct Player {
     pub rect: Rect,

@@ -2,7 +2,7 @@ use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{Entity, BACKGROUND_COLOR, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL};
+use crate::{Entity, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL};
 
 use super::bricks::{Bricks, Touch};
 use super::player::Player;
@@ -38,16 +38,14 @@ pub fn intersect_bricks(ball: &Ball, bricks: &mut Bricks) -> Touch {
             let is_between = |a_top, a_b, b_t, b_bottom| a_top <= b_bottom && a_b >= b_t;
 
             let touch = is_between(ball_left, ball_right, brick_left, brick_right)
-                && (is_between(ball_top as i32, ball_bottom as i32, brick_top, brick_bottom));
+                && (is_between(ball_top, ball_bottom, brick_top, brick_bottom));
 
-            if brick.alive {
-                if touch {
-                    brick.dead();
-                    if is_between(ball.x as i32, ball.x as i32, brick_left, brick_right) {
-                        return Touch::Top;
-                    } else {
-                        return Touch::Side;
-                    }
+            if brick.alive && touch {
+                brick.dead();
+                if is_between(ball.x as i32, ball.x as i32, brick_left, brick_right) {
+                    return Touch::Top;
+                } else {
+                    return Touch::Side;
                 }
             }
         }
@@ -57,7 +55,7 @@ pub fn intersect_bricks(ball: &Ball, bricks: &mut Bricks) -> Touch {
 
 impl BallInteraction for Bricks {
     fn intersect(&mut self, ball: &mut Ball) {
-        match intersect_bricks(&ball, self) {
+        match intersect_bricks(ball, self) {
             Touch::Top => {
                 ball.reflect_y();
             }
@@ -123,19 +121,19 @@ impl Ball {
     }
 
     pub fn neg_vel_x(&mut self) {
-        self.vel_x = self.vel_x.abs() * -1;
+        self.vel_x = -self.vel_x.abs();
     }
 
     pub fn neg_vel_y(&mut self) {
-        self.vel_y = self.vel_y.abs() * -1;
+        self.vel_y = -self.vel_y.abs();
     }
 
     pub fn physics(&mut self) {
-        if self.x < 0 + self.radius || self.x as u32 > WIDTH - self.radius as u32 {
+        if self.x < self.radius || self.x as u32 > WIDTH - self.radius as u32 {
             self.vel_x *= -1;
         }
 
-        if self.y < 0 + self.radius || self.y as u32 > HEIGHT - self.radius as u32 {
+        if self.y < self.radius || self.y as u32 > HEIGHT - self.radius as u32 {
             self.vel_y *= -1;
         }
 
