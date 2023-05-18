@@ -2,7 +2,7 @@ use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{Entity, BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::{Entity, BACKGROUND_COLOR, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL};
 
 use super::bricks::{Bricks, Touch};
 use super::player::Player;
@@ -71,19 +71,6 @@ impl BallInteraction for Bricks {
 
 impl BallInteraction for Player {
     fn intersect(&mut self, ball: &mut Ball) {
-        let left_half = Rect::new(
-            self.rect.x,
-            self.rect.y,
-            self.rect.width() / 2,
-            self.rect.height(),
-        );
-        let right_half = Rect::new(
-            self.rect.x + self.rect.width() as i32 / 2,
-            self.rect.y,
-            self.rect.width() / 2,
-            self.rect.height(),
-        );
-
         let ball_rect = Rect::new(
             ball.x as i32 - ball.radius as i32,
             ball.y as i32 - ball.radius as i32,
@@ -91,16 +78,11 @@ impl BallInteraction for Player {
             ball.radius as u32 * 2,
         );
 
-        if ball_rect.has_intersection(left_half) {
+        if ball_rect.has_intersection(self.rect) {
             ball.neg_vel_y();
-            ball.neg_vel_x();
-            return;
-        }
-
-        if ball_rect.has_intersection(right_half) {
-            ball.neg_vel_y();
-            ball.pos_vel_x();
-            return;
+            let mid = self.rect.x + self.rect.width() as i32 / 2;
+            if ball.x as i32 > mid { ball.pos_vel_x() }
+            else { ball.neg_vel_x() }
         }
     }
 }
@@ -108,16 +90,13 @@ impl BallInteraction for Player {
 impl Entity for Ball {
     fn draw(&mut self, canvas: &mut Canvas<Window>) {
         canvas
-            .circle(self.x, self.y, self.radius, Color::BLACK)
+            .filled_circle(self.x, self.y, self.radius, Color::BLACK)
             .unwrap();
     }
-    fn kill(&mut self, canvas: &mut Canvas<Window>) {
+    fn kill(&mut self, _canvas: &mut Canvas<Window>) {
         todo!()
     }
 }
-
-pub const BALL_RADIUS: i16 = 20;
-pub const BALL_VEL: i16 = 3;
 
 impl Ball {
     pub fn new() -> Ball {
