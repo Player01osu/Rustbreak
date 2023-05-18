@@ -1,21 +1,13 @@
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{Entity, BACKGROUND_COLOR};
+use crate::{Entity, BACKGROUND_COLOR, MAX_ROW, MAX_COL};
 use crate::{HEIGHT, WIDTH};
-
-pub const BRICK_WIDTH: u32 = 100;
-pub const BRICK_HEIGHT: u32 = 40;
-
-pub const MAX_ROW: usize = 6;
-pub const MAX_COL: usize = 5;
 
 // Both row and col are zero indexed
 #[derive(Debug)]
 pub struct Brick {
     pub rect: Rect,
-    pub row: i32,
-    pub col: i32,
     pub alive: bool,
 }
 
@@ -34,7 +26,7 @@ impl Entity for Brick {
         }
     }
 
-    fn kill(&mut self, canvas: &mut Canvas<Window>) {
+    fn kill(&mut self, _canvas: &mut Canvas<Window>) {
         todo!()
     }
 }
@@ -48,7 +40,7 @@ impl Entity for Bricks {
         }
     }
 
-    fn kill(&mut self, canvas: &mut Canvas<Window>) {
+    fn kill(&mut self, _canvas: &mut Canvas<Window>) {
         todo!()
     }
 }
@@ -104,12 +96,6 @@ impl Brick {
         let brick_y = (outer_pad as i32 + (row as i32 * inner_pad as i32))
             + (row as i32 * brick_height as i32);
 
-        const LEFT_OFFSET: i32 = 80;
-        const TOP_OFFSET: i32 = 20;
-
-        let col = col as i32;
-        let row = row as i32;
-
         let rect = Rect::new(
             brick_x as i32,
             brick_y as i32,
@@ -117,17 +103,8 @@ impl Brick {
             brick_height as u32,
         );
 
-        //let rect = Rect::new(
-        //    (col * (BRICK_WIDTH as i32 + 9)) + LEFT_OFFSET,
-        //    (row * (BRICK_HEIGHT as i32 + 9)) + TOP_OFFSET,
-        //    BRICK_WIDTH,
-        //    BRICK_HEIGHT,
-        //);
-
         Brick {
             rect,
-            col,
-            row: row - 1,
             alive: true,
         }
     }

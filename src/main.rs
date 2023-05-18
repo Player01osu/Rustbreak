@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 mod core;
 
 use self::core::ball::BallInteraction;
@@ -12,8 +13,15 @@ use sdl2::video::Window;
 
 pub const WIDTH: u32 = 800;
 pub const HEIGHT: u32 = 600;
+pub const MAX_ROW: usize = 6;
+pub const MAX_COL: usize = 5;
+pub const BALL_RADIUS: i16 = 20;
+pub const BALL_VEL: i16 = 5;
+pub const PLAYER_WIDTH: u32 = 90;
+pub const PLAYER_HEIGHT: u32 = 10;
+pub const PLAYER_VEL: i32 = 7;
 
-pub const BACKGROUND_COLOR: Color = Color::RGB(0, 255, 255);
+pub const BACKGROUND_COLOR: Color = Color::RGB(100, 100, 100);
 
 pub fn redraw_bg(canvas: &mut Canvas<Window>) {
     canvas.set_draw_color(BACKGROUND_COLOR);
@@ -66,13 +74,13 @@ fn main() {
                     keycode: Some(Keycode::H),
                     ..
                 } => {
-                    player.set_vel(-5);
+                    player.set_vel(PLAYER_VEL * -1);
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::L),
                     ..
                 } => {
-                    player.set_vel(5);
+                    player.set_vel(PLAYER_VEL);
                 }
                 Event::KeyUp {
                     keycode: Some(Keycode::L),
