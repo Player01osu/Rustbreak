@@ -2,7 +2,7 @@ use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{Entity, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL};
+use crate::{Entity, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL, BALL_COLOR};
 
 use super::bricks::{Bricks, Touch};
 use super::player::Player;
@@ -88,7 +88,7 @@ impl BallInteraction for Player {
 impl Entity for Ball {
     fn draw(&mut self, canvas: &mut Canvas<Window>) {
         canvas
-            .filled_circle(self.x, self.y, self.radius, Color::BLACK)
+            .filled_circle(self.x, self.y, self.radius, BALL_COLOR)
             .unwrap();
     }
     fn kill(&mut self, _canvas: &mut Canvas<Window>) {

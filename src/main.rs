@@ -13,15 +13,26 @@ use sdl2::video::Window;
 
 pub const WIDTH: u32 = 800;
 pub const HEIGHT: u32 = 600;
-pub const MAX_ROW: usize = 6;
-pub const MAX_COL: usize = 5;
-pub const BALL_RADIUS: i16 = 20;
-pub const BALL_VEL: i16 = 5;
-pub const PLAYER_WIDTH: u32 = 90;
-pub const PLAYER_HEIGHT: u32 = 10;
-pub const PLAYER_VEL: i32 = 7;
+pub const FPS: u32 = 60;
 
-pub const BACKGROUND_COLOR: Color = Color::RGB(100, 100, 100);
+pub const MAX_ROW: usize = 8;
+pub const MAX_COL: usize = 14;
+pub const GRID_RATIO_N: u32 = 2;
+pub const GRID_RATIO_D: u32 = 7;
+
+pub const BALL_RADIUS: i16 = 10;
+pub const BALL_VEL: i16 = 5;
+pub const BALL_COLOR: Color = Color::RGB(200, 60, 60);
+
+pub const PLAYER_WIDTH: u32 = 90;
+pub const PLAYER_HEIGHT: u32 = 14;
+pub const PLAYER_VEL: i32 = 7;
+pub const PLAYER_COLOR: Color = Color::RGB(80, 100, 120);
+
+pub const BACKGROUND_COLOR: Color = Color::BLACK;
+
+pub const LEFT_KEY: Keycode = Keycode::H;
+pub const RIGHT_KEY: Keycode = Keycode::L;
 
 pub fn redraw_bg(canvas: &mut Canvas<Window>) {
     canvas.set_draw_color(BACKGROUND_COLOR);
@@ -71,28 +82,32 @@ fn main() {
                     ..
                 } => break 'running,
                 Event::KeyDown {
-                    keycode: Some(Keycode::H),
+                    keycode: Some(LEFT_KEY),
                     ..
                 } => {
-                    player.set_vel(-PLAYER_VEL);
+                    player.vel = -PLAYER_VEL;
                 }
                 Event::KeyDown {
-                    keycode: Some(Keycode::L),
+                    keycode: Some(RIGHT_KEY),
                     ..
                 } => {
-                    player.set_vel(PLAYER_VEL);
+                    player.vel = PLAYER_VEL;
                 }
                 Event::KeyUp {
-                    keycode: Some(Keycode::L),
+                    keycode: Some(LEFT_KEY),
                     ..
                 } => {
-                    player.set_vel(0);
+                    if player.vel == -PLAYER_VEL {
+                        player.vel = 0
+                    }
                 }
                 Event::KeyUp {
-                    keycode: Some(Keycode::H),
+                    keycode: Some(RIGHT_KEY),
                     ..
                 } => {
-                    player.set_vel(0);
+                    if player.vel == PLAYER_VEL {
+                        player.vel = 0
+                    }
                 }
                 _ => {}
             }
@@ -108,6 +123,6 @@ fn main() {
 
         canvas.present();
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / FPS));
     }
 }

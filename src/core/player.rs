@@ -1,17 +1,18 @@
 
 
-use sdl2::{rect::Rect, render::Canvas, video::Window};
+use sdl2::{rect::Rect, render::Canvas, video::Window, pixels::Color};
 
-use crate::{Entity, HEIGHT, WIDTH, PLAYER_WIDTH, PLAYER_HEIGHT};
+use crate::{Entity, HEIGHT, WIDTH, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_COLOR};
 
 pub struct Player {
     pub rect: Rect,
-    vel: i32,
+    pub vel: i32,
 }
 
 impl Entity for Player {
     fn draw(&mut self, canvas: &mut Canvas<Window>) {
         self.translate();
+        canvas.set_draw_color(PLAYER_COLOR);
         canvas.fill_rect(self.rect).unwrap();
     }
 

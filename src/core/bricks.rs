@@ -1,13 +1,14 @@
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{Entity, BACKGROUND_COLOR, MAX_ROW, MAX_COL};
+use crate::{Entity, BACKGROUND_COLOR, MAX_COL, MAX_ROW, GRID_RATIO_N, GRID_RATIO_D};
 use crate::{HEIGHT, WIDTH};
 
 // Both row and col are zero indexed
 #[derive(Debug)]
 pub struct Brick {
     pub rect: Rect,
+    pub row: usize,
     pub alive: bool,
 }
 
@@ -18,7 +19,12 @@ pub struct Bricks {
 impl Entity for Brick {
     fn draw(&mut self, canvas: &mut Canvas<Window>) {
         if self.alive {
-            canvas.set_draw_color(Color::RGB(0, 0, 0));
+            let color = (self.row as u8 * 3) + 15;
+            canvas.set_draw_color(Color::RGB(
+                color.wrapping_add(200),
+                color.wrapping_add(10).wrapping_mul(2),
+                color.wrapping_add(40).wrapping_mul(6),
+            ));
             canvas.fill_rect(self.rect).unwrap();
         } else {
             canvas.set_draw_color(BACKGROUND_COLOR);
@@ -76,7 +82,7 @@ impl Brick {
         let screen_width = WIDTH;
         let screen_height = HEIGHT;
 
-        let grid_ratio = |n| (n * 3) / 7;
+        let grid_ratio = |n| (n * GRID_RATIO_N) / GRID_RATIO_D;
 
         let grid_height = grid_ratio(screen_height);
         let grid_width = screen_width;
@@ -91,20 +97,14 @@ impl Brick {
             - (inner_pad as u32 * (number_of_rows as u32 - 1)))
             / number_of_rows as u32;
 
-        let brick_x = (outer_pad + (col as i32 * inner_pad))
-            + (col as i32 * brick_width as i32);
-        let brick_y = (outer_pad + (row as i32 * inner_pad))
-            + (row as i32 * brick_height as i32);
+        let brick_x = (outer_pad + (col as i32 * inner_pad)) + (col as i32 * brick_width as i32);
+        let brick_y = (outer_pad + (row as i32 * inner_pad)) + (row as i32 * brick_height as i32);
 
-        let rect = Rect::new(
-            brick_x,
-            brick_y,
-            brick_width,
-            brick_height,
-        );
+        let rect = Rect::new(brick_x, brick_y, brick_width, brick_height);
 
         Brick {
             rect,
+            row,
             alive: true,
         }
     }
