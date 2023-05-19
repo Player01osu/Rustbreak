@@ -1,8 +1,9 @@
 use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
-use crate::{Entity, BACKGROUND_COLOR, MAX_COL, MAX_ROW, GRID_RATIO_N, GRID_RATIO_D};
-use crate::{HEIGHT, WIDTH};
+use crate::{
+    Entity, BACKGROUND_COLOR, GRID_RATIO_D, GRID_RATIO_N, HEIGHT, MAX_COL, MAX_ROW, WIDTH,
+};
 
 // Both row and col are zero indexed
 #[derive(Debug)]

@@ -1,6 +1,6 @@
 use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::video::Window;
-use sdl2::{pixels::Color, rect::Rect, render::Canvas};
+use sdl2::{rect::Rect, render::Canvas};
 
 use crate::{Entity, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL, BALL_COLOR};
 
