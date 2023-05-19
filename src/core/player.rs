@@ -36,7 +36,10 @@ impl Player {
     }
 
     pub fn translate(&mut self) {
-        self.rect.x += self.vel;
+        let x = self.rect.x + self.vel;
+        if x > 0 && x + (self.rect.width() as i32) < WIDTH as i32{
+            self.rect.x = x;
+        }
     }
 
     pub fn set_vel(&mut self, vel: i32) {
