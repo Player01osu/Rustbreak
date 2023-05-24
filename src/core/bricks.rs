@@ -2,7 +2,7 @@ use sdl2::video::Window;
 use sdl2::{pixels::Color, rect::Rect, render::Canvas};
 
 use crate::{
-    Entity, BACKGROUND_COLOR, GRID_RATIO_D, GRID_RATIO_N, HEIGHT, MAX_COL, MAX_ROW, WIDTH,
+    Entity, BACKGROUND_COLOR, GRID_RATIO_D, GRID_RATIO_N, HEIGHT, MAX_COL, MAX_ROW, WIDTH, GRID_HEIGHT, GRID_WIDTH, BALL_RADIUS,
 };
 
 // Both row and col are zero indexed
@@ -20,11 +20,11 @@ pub struct Bricks {
 impl Entity for Brick {
     fn draw(&mut self, canvas: &mut Canvas<Window>) {
         if self.alive {
-            let color = (self.row as u8 * 3) + 15;
+            let color = self.row as u8 / 2;
             canvas.set_draw_color(Color::RGB(
-                color.wrapping_add(200),
-                color.wrapping_add(10).wrapping_mul(2),
-                color.wrapping_add(40).wrapping_mul(6),
+                color.wrapping_add(90).wrapping_mul(40),
+                color.wrapping_mul(20).wrapping_sub(12),
+                color.wrapping_add(230).wrapping_mul(60),
             ));
             canvas.fill_rect(self.rect).unwrap();
         } else {
@@ -79,14 +79,14 @@ impl Brick {
         let number_of_rows = MAX_ROW;
         let number_of_cols = MAX_COL;
         let inner_pad = 5;
-        let outer_pad = 16;
-        let screen_width = WIDTH;
-        let screen_height = HEIGHT;
+        let outer_pad = BALL_RADIUS as i32 * 3 / 4;
+        let grid_width = GRID_WIDTH;
+        let grid_height = GRID_HEIGHT;
 
         let grid_ratio = |n| (n * GRID_RATIO_N) / GRID_RATIO_D;
 
-        let grid_height = grid_ratio(screen_height);
-        let grid_width = screen_width;
+        let grid_height = grid_ratio(grid_height);
+        let grid_width = grid_width;
 
         let brick_width = (grid_width
             - (outer_pad as u32 * 2)

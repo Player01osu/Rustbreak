@@ -2,7 +2,7 @@ use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::video::Window;
 use sdl2::{rect::Rect, render::Canvas};
 
-use crate::{Entity, HEIGHT, WIDTH, BALL_RADIUS, BALL_VEL, BALL_COLOR};
+use crate::{Entity, BALL_COLOR, BALL_RADIUS, BALL_VEL, GRID_HEIGHT, GRID_WIDTH, HEIGHT, WIDTH};
 
 use super::bricks::{Bricks, Touch};
 use super::player::Player;
@@ -11,8 +11,8 @@ use super::player::Player;
 pub struct Ball {
     pub x: i16,
     pub y: i16,
-    vel_x: i16,
-    vel_y: i16,
+    pub dx: i16,
+    pub dy: i16,
     pub radius: i16,
     lives: u8,
 }
@@ -20,14 +20,14 @@ pub struct Ball {
 pub trait BallInteraction {
     fn intersect(&mut self, ball: &mut Ball);
 }
-pub fn intersect_bricks(ball: &Ball, bricks: &mut Bricks) -> Touch {
+pub fn intersect_bricks(ball: &mut Ball, bricks: &mut Bricks) -> Touch {
     for col in bricks.bricks.iter_mut() {
         for brick in col.iter_mut() {
-            let ball_right = (ball.x + BALL_RADIUS / 2) as i32;
-            let ball_left = (ball.x - BALL_RADIUS / 2) as i32;
+            let ball_right = (ball.x + BALL_RADIUS) as i32;
+            let ball_left = (ball.x - BALL_RADIUS) as i32;
 
-            let ball_top = (ball.y - BALL_RADIUS / 2) as i32;
-            let ball_bottom = (ball.y + BALL_RADIUS / 2) as i32;
+            let ball_top = (ball.y - BALL_RADIUS) as i32;
+            let ball_bottom = (ball.y + BALL_RADIUS) as i32;
 
             let brick_right = brick.x() + brick.width() as i32;
             let brick_left = brick.x();
@@ -35,13 +35,14 @@ pub fn intersect_bricks(ball: &Ball, bricks: &mut Bricks) -> Touch {
             let brick_top = brick.y();
             let brick_bottom = brick.y() + brick.height() as i32;
 
-            let is_between = |a_top, a_b, b_t, b_bottom| a_top <= b_bottom && a_b >= b_t;
+            let is_between = |a_a, a_b, b_a, b_b| a_a <= b_b && a_b >= b_a;
 
             let touch = is_between(ball_left, ball_right, brick_left, brick_right)
                 && (is_between(ball_top, ball_bottom, brick_top, brick_bottom));
 
             if brick.alive && touch {
                 brick.dead();
+
                 if is_between(ball.x as i32, ball.x as i32, brick_left, brick_right) {
                     return Touch::Top;
                 } else {
@@ -77,10 +78,13 @@ impl BallInteraction for Player {
         );
 
         if ball_rect.has_intersection(self.rect) {
-            ball.neg_vel_y();
+            ball.neg_dy();
             let mid = self.rect.x + self.rect.width() as i32 / 2;
-            if ball.x as i32 > mid { ball.pos_vel_x() }
-            else { ball.neg_vel_x() }
+            if ball.x as i32 > mid {
+                ball.pos_dx()
+            } else {
+                ball.neg_dx()
+            }
         }
     }
 }
@@ -99,45 +103,45 @@ impl Entity for Ball {
 impl Ball {
     pub fn new() -> Ball {
         Ball {
-            x: WIDTH as i16 / 2,
-            y: HEIGHT as i16 - 50,
+            x: GRID_WIDTH as i16 / 2,
+            y: GRID_HEIGHT as i16 - 50,
             radius: BALL_RADIUS,
             lives: 3,
-            vel_x: BALL_VEL,
-            vel_y: BALL_VEL,
+            dx: BALL_VEL,
+            dy: BALL_VEL,
         }
     }
 
     pub fn reflect_x(&mut self) {
-        self.vel_x *= -1;
+        self.dx *= -1;
     }
 
     pub fn reflect_y(&mut self) {
-        self.vel_y *= -1;
+        self.dy *= -1;
     }
 
-    pub fn pos_vel_x(&mut self) {
-        self.vel_x = self.vel_x.abs();
+    pub fn pos_dx(&mut self) {
+        self.dx = self.dx.abs();
     }
 
-    pub fn neg_vel_x(&mut self) {
-        self.vel_x = -self.vel_x.abs();
+    pub fn neg_dx(&mut self) {
+        self.dx = -self.dx.abs();
     }
 
-    pub fn neg_vel_y(&mut self) {
-        self.vel_y = -self.vel_y.abs();
+    pub fn neg_dy(&mut self) {
+        self.dy = -self.dy.abs();
     }
 
     pub fn physics(&mut self) {
-        if self.x < self.radius || self.x as u32 > WIDTH - self.radius as u32 {
-            self.vel_x *= -1;
+        if self.x < self.radius || self.x as u32 > GRID_WIDTH - self.radius as u32 {
+            self.dx *= -1;
         }
 
-        if self.y < self.radius || self.y as u32 > HEIGHT - self.radius as u32 {
-            self.vel_y *= -1;
+        if self.y < self.radius || self.y as u32 > GRID_HEIGHT - self.radius as u32 {
+            self.dy *= -1;
         }
 
-        self.x += self.vel_x;
-        self.y += self.vel_y;
+        self.x += self.dx;
+        self.y += self.dy;
     }
 }

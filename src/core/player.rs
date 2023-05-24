@@ -1,5 +1,5 @@
 use sdl2::{rect::Rect, render::Canvas, video::Window};
-use crate::{Entity, HEIGHT, WIDTH, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_COLOR};
+use crate::{Entity, HEIGHT, WIDTH, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_COLOR, GRID_WIDTH, GRID_HEIGHT};
 
 pub struct Player {
     pub rect: Rect,
@@ -21,8 +21,8 @@ impl Entity for Player {
 impl Player {
     pub fn new() -> Player {
         let rect = Rect::new(
-            (WIDTH as i32 / 2) - (PLAYER_WIDTH as i32 / 2),
-            HEIGHT as i32 - 30,
+            (GRID_WIDTH as i32 / 2) - (PLAYER_WIDTH as i32 / 2),
+            GRID_HEIGHT as i32 - 30,
             PLAYER_WIDTH,
             PLAYER_HEIGHT,
         );
@@ -34,7 +34,7 @@ impl Player {
 
     pub fn translate(&mut self) {
         let x = self.rect.x + self.vel;
-        if x > 0 && x + (self.rect.width() as i32) < WIDTH as i32{
+        if x > 0 && x + (self.rect.width() as i32) < GRID_WIDTH as i32{
             self.rect.x = x;
         }
     }
