@@ -62,7 +62,7 @@ fn main() {
     let video_subsystem = sdl_context.video().unwrap();
 
     let window = video_subsystem
-        .window("rustbreak", WIDTH, HEIGHT)
+        .window("TEST", WIDTH, HEIGHT)
         .position_centered()
         .build()
         .unwrap();
