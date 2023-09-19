@@ -91,9 +91,16 @@ impl BallInteraction for Player {
 
 impl Entity for Ball {
     fn draw(&mut self, canvas: &mut Canvas<Window>) {
-        canvas
-            .filled_circle(self.x, self.y, self.radius, BALL_COLOR)
-            .unwrap();
+        canvas.set_draw_color(BALL_COLOR);
+        canvas.fill_rect(Rect::new(
+            (self.x - self.radius).into(),
+            (self.y - self.radius).into(),
+            self.radius as u32 * 2,
+            self.radius as u32 * 2,
+        )).unwrap();
+        //canvas
+        //    .filled_circle(self.x, self.y, self.radius, BALL_COLOR)
+        //    .unwrap();
     }
     fn kill(&mut self, _canvas: &mut Canvas<Window>) {
         todo!()
@@ -132,16 +139,16 @@ impl Ball {
         self.dy = -self.dy.abs();
     }
 
-    pub fn physics(&mut self) {
+    pub fn physics(&mut self, dt: f64) {
         if self.x < self.radius || self.x as u32 > GRID_WIDTH - self.radius as u32 {
-            self.dx *= -1;
+            self.reflect_x();
         }
 
         if self.y < self.radius || self.y as u32 > GRID_HEIGHT - self.radius as u32 {
-            self.dy *= -1;
+            self.reflect_y();
         }
 
-        self.x += self.dx;
-        self.y += self.dy;
+        self.x += (self.dx as f64 * dt) as i16;
+        self.y += (self.dy as f64 * dt) as i16;
     }
 }
